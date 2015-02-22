@@ -9,7 +9,7 @@ end
 namespace :db do
   desc "Create tables"
   task :create_tables do
-    DB.create_table :artists do
+    DB.create_table :bands do
       primary_key :id
       String :name
       Text :description
@@ -19,20 +19,20 @@ namespace :db do
       primary_key :id
       String  :title
       Integer :rating
-      Integer :artist_id
+      Integer :band_id
     end
   end
 
   desc "Drop tables"
   task :drop_tables do
-    DB.run("drop table artists")
+    DB.run("drop table bands")
     DB.run("drop table songs")
   end
 
   desc "Reset database to initial state"
   task :reset => %i[drop_tables create_tables seed]
 
-  desc "Insert sample artists and songs"
+  desc "Insert sample bands and songs"
   task :seed do
     seed_data = {
       "Pearl Jam" => [
@@ -62,14 +62,14 @@ namespace :db do
       ]
     }
 
-    artists = DB[:artists]
+    bands = DB[:bands]
     songs = DB[:songs]
 
-    seed_data.each_pair do |artist_name, songs_data|
-      artist = artists.where(name: artist_name).first
-      unless artist
-        puts "Create artist: #{artist_name}"
-        artist_id = artists.insert(name: artist_name)
+    seed_data.each_pair do |band_name, songs_data|
+      band = bands.where(name: band_name).first
+      unless band
+        puts "Create band: #{band_name}"
+        band_id = bands.insert(name: band_name)
       end
       songs_data.each do |song_data|
         title = song_data[:title]
@@ -77,7 +77,7 @@ namespace :db do
         song = songs.where(title: title).first
         unless song
           puts "Create song: #{title} (#{rating})"
-          song = songs.insert(title: title, rating: rating, artist_id: artist_id)
+          song = songs.insert(title: title, rating: rating, band_id: band_id)
         end
       end
     end

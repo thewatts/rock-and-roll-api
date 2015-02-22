@@ -13,25 +13,25 @@ class RockAndRollAPI < Sinatra::Base
     end
   end
 
-  def songs_for_artist(artist)
-    artist_songs_records = DB[:songs].where(artist_id: artist[:id])
-    artist_songs_records.map do |song|
-      { id: song[:id], title: song[:title], rating: song[:rating], artist: artist[:id] }
+  def songs_for_band(band)
+    band_songs_records = DB[:songs].where(band_id: band[:id])
+    band_songs_records.map do |song|
+      { id: song[:id], title: song[:title], rating: song[:rating], band: band[:id] }
     end
   end
 
-  def song_ids_for_artist(artist)
-    songs = songs_for_artist(artist)
+  def song_ids_for_band(band)
+    songs = songs_for_band(band)
     songs.map { |song| song[:id] }
   end
 
-  def artist_for_slug(slug)
-    artists = DB[:artists]
-    artists.detect do |artist|
-      name = artist[:name]
+  def band_for_slug(slug)
+    bands = DB[:bands]
+    bands.detect do |band|
+      name = band[:name]
       name_parts = name.split(/\s+/).map(&:downcase)
-      artist_slug = name_parts.join('-')
-      artist_slug == slug
+      band_slug = name_parts.join('-')
+      band_slug == slug
     end
   end
 
@@ -48,18 +48,18 @@ class RockAndRollAPI < Sinatra::Base
   end
 
   get '/bands' do
-    artists = DB[:artists]
+    bands = DB[:bands]
     songs   = DB[:songs]
 
     status 200
     headers({ "Content-Type" =>"application/json" })
 
-    artists_array = artists.map do |artist|
+    bands_array = bands.map do |band|
       {
-        id: artist[:id],
-        name: artist[:name],
-        description: artist[:description],
-        songs: song_ids_for_artist(artist),
+        id: band[:id],
+        name: band[:name],
+        description: band[:description],
+        songs: song_ids_for_band(band),
       }
     end
 
@@ -68,12 +68,12 @@ class RockAndRollAPI < Sinatra::Base
         id: song[:id],
         title: song[:title],
         rating: song[:rating],
-        band: song[:artist_id],
+        band: song[:band_id],
       }
     end
 
     payload = {
-      bands: artists_array,
+      bands: bands_array,
       songs: songs_array,
     }
 
@@ -83,34 +83,34 @@ class RockAndRollAPI < Sinatra::Base
   post '/bands' do
     raw_data = parse_body(request.body.read)
 
-    artist_name = raw_data[:band][:name]
-    attributes  = { name: artist_name }
-    artists     = DB[:artists]
-    artist_id   = artists.insert(attributes)
+    band_name = raw_data[:band][:name]
+    attributes  = { name: band_name }
+    bands     = DB[:bands]
+    band_id   = bands.insert(attributes)
 
     status 201 # Created
     headers({ "Content-Type" =>"application/json" })
 
     {
-      band: attributes.merge(id: artist_id, songs: []),
+      band: attributes.merge(id: band_id, songs: []),
       songs: [],
     }.to_json
   end
 
   get '/bands/:slug' do
-    artist = artist_for_slug(params[:slug])
+    band = band_for_slug(params[:slug])
 
     status 200
     headers({ "Content-Type" =>"application/json" })
 
     payload = {
       band: {
-        id: artist[:id],
-        name: artist[:name],
-        description: artist[:description],
-        songs: song_ids_for_artist(artist),
+        id: band[:id],
+        name: band[:name],
+        description: band[:description],
+        songs: song_ids_for_band(band),
       },
-      songs: songs_for_artist(artist),
+      songs: songs_for_band(band),
     }
 
     payload.to_json
@@ -120,13 +120,13 @@ class RockAndRollAPI < Sinatra::Base
     status 200
     headers({ "Content-Type" =>"application/json" })
 
-    artist = artist_for_slug(params[:slug])
-    songs_for_artist(artist).to_json
+    band = band_for_slug(params[:slug])
+    songs_for_band(band).to_json
   end
 
   put '/bands/:slug' do
     raw_data = parse_body(request.body.read)
-    bands = DB[:artists]
+    bands = DB[:bands]
     bands.where(id: params[:slug]).update(description: raw_data[:band][:description])
     attributes = bands.where(id: params[:slug]).first
 
@@ -142,8 +142,8 @@ class RockAndRollAPI < Sinatra::Base
     raw_data = parse_body(request.body.read)
 
     songs = DB[:songs]
-    band  = DB[:artists].where(id: raw_data[:song][:band]).first
-    attributes = { title: raw_data[:song][:title], artist_id: raw_data[:song][:band], rating: 0 }
+    band  = DB[:bands].where(id: raw_data[:song][:band]).first
+    attributes = { title: raw_data[:song][:title], band_id: raw_data[:song][:band], rating: 0 }
 
     song_id = songs.insert(attributes)
 
