@@ -1,0 +1,8 @@
+#! /usr/bin/env ruby
+
+require 'pry'
+require 'sequel'
+require_relative '../config/initializer'
+
+@db = DB
+Pry.start

@@ -1,1 +1,2 @@
-DB = Sequel.connect(ENV['DATABASE_URL'])
+url = "postgres://localhost"
+DB = Sequel.connect(url)

@@ -2,12 +2,17 @@ require 'rake'
 require 'sequel'
 require_relative './config/initializer'
 
+task :console do
+  exec "./bin/console"
+end
+
 namespace :db do
   desc "Create tables"
   task :create_tables do
     DB.create_table :artists do
       primary_key :id
       String :name
+      Text :description
     end
 
     DB.create_table :songs do
@@ -77,6 +82,4 @@ namespace :db do
       end
     end
   end
-
 end
-
